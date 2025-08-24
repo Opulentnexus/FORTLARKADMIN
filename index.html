@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chitt Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase SDKs -->
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+</head>
+<body>
+
+<!-- Login Page -->
+<div class="login-container" id="login-page">
+  <h2>Chitt Admin Login</h2>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <button id="login-btn">Login</button>
+  <p id="error-msg"></p>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin-container hidden" id="admin-page"> <!-- hidden by default -->
+  <aside class="sidebar">
+    <h3>Chitt Admin</h3>
+    <ul>
+      <li onclick="showSection('dashboard')">Dashboard</li>
+      <li onclick="showSection('users')">Users</li>
+      <li onclick="showSection('settings')">Settings</li>
+      <li id="logout-btn">Logout</li>
+    </ul>
+  </aside>
+
+  <section id="dashboard" class="content-section active">
+  <h2>Dashboard</h2>
+  <p>Welcome to Chitt Admin Panel.</p>
+   <div class="table-container"></div>
+  <table id="users-table" border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse: collapse;">
+    <thead style="background-color:#1976d2; color:white;">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Payments (10 Months)</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Users will load here via JS -->
+    </tbody>
+  </table>
+</section>
+
+    
+   <section id="users" class="content-section">
+  <h2>Add New User</h2>
+
+  <div class="add-user-form">
+    <input type="text" id="newName" placeholder="Name" required>
+    <input type="email" id="newEmail" placeholder="Email" required>
+    <input type="text" id="newNumber" placeholder="Phone Number" required>
+     <input type="password" id="newPassword" placeholder="Password" required>
+    <input type="month" id="newStartMonth" placeholder="Start Month (YYYY-MM)" required>
+    <button id="addUserBtn">Add User</button>
+    <p id="addUserMsg"></p>
+  </div>
+</section>
+
+    
+    <section id="settings" class="content-section">
+      <h2>Settings</h2>
+      <p>Change your preferences here.</p>
+    </section>
+  </main>
+</div>
+
+
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
