@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css2?family=MuseoModerno:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend+Tera:wght@400;700&display=swap" rel="stylesheet">
+
   <title>Chitt Admin Panel</title>
   <link rel="stylesheet" href="style.css">
 
@@ -14,7 +17,7 @@
 
 <!-- Login Page -->
 <div class="login-container" id="login-page">
-  <h2>Chitt Admin Login</h2>
+  <h2>Chit Admin Login</h2>
   <input type="email" id="email" placeholder="Email" />
   <input type="password" id="password" placeholder="Password" />
   <button id="login-btn">Login</button>
@@ -24,7 +27,7 @@
 <!-- Admin Panel -->
 <div class="admin-container hidden" id="admin-page"> <!-- hidden by default -->
   <aside class="sidebar">
-    <h3>Chitt Admin</h3>
+    <h3>Chit Admin</h3>
     <ul>
       <li onclick="showSection('dashboard')">Dashboard</li>
       <li onclick="showSection('users')">Users</li>
@@ -35,7 +38,7 @@
 
   <section id="dashboard" class="content-section active">
   <h2>Dashboard</h2>
-  <p>Welcome to Chitt Admin Panel.</p>
+  <p>Welcome to Chit Admin Panel.</p>
    <div class="table-container"></div>
   <table id="users-table" border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse: collapse;">
     <thead style="background-color:#1976d2; color:white;">
@@ -44,6 +47,7 @@
         <th>Email</th>
         <th>Phone</th>
         <th>Payments (10 Months)</th>
+        <th>Profit</th> 
         
       </tr>
     </thead>
@@ -69,15 +73,48 @@
 </section>
 
     
-    <section id="settings" class="content-section">
-      <h2>Settings</h2>
-      <p>Change your preferences here.</p>
-    </section>
-  </main>
+<section id="settings" class="content-section">
+  <h2>Settings</h2>
+  <p>Manage winner announcements.</p>
+
+  <div class="winner-popup-setup">
+    <h3>Winner Announcement Setup</h3>
+    <form id="winner-popup-form">
+      <label for="winner-name">Winner Name:</label>
+      <input type="text" id="winner-name" placeholder="Enter winner name" required>
+
+      <label for="winner-prize">Prize:</label>
+      <input type="text" id="winner-prize" placeholder="Enter prize" required>
+
+      <label for="start-date">Start Date:</label>
+      <input type="date" id="start-date" required>
+
+      <label for="end-date">End Date:</label>
+      <input type="date" id="end-date" required>
+
+      <button type="submit">Save Announcement</button>
+    </form>
+    <p id="popup-msg"></p>
+  </div>
+</section>
+
+<!-- Winner Popup -->
+<div class="winner-popup" id="winner-popup">
+  <div class="winner-popup-content">
+    <h2>🎉 Congratulations!</h2>
+    <p id="popup-winner-name">Winner Name</p>
+    <p id="popup-winner-prize">Prize</p>
+    <button id="close-popup">Close</button>
+  </div>
 </div>
+
+
+
+
 
 
 
 <script type="module" src="script.js"></script>
 </body>
 </html>
+
