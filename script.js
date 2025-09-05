@@ -68,11 +68,11 @@ window.showSection = function(sectionId) {
   if (sectionId === "payments") loadUsersPayments();
 };
 
-// ------------------- Generate 10 Months -------------------
-function generateMonths(startMonth) {
+// ------------------- Generate Months -------------------
+function generateMonths(startMonth, count) {
   const months = [];
   const [year, month] = startMonth.split("-").map(Number);
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < count; i++) {
     const d = new Date(year, month - 1 + i, 1);
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
@@ -96,86 +96,181 @@ async function loadUsersPayments() {
 
       // Payments column
       const paymentTd = document.createElement("td");
-      const months = generateMonths(user.registrationMonth || "2025-01");
 
-      months.forEach(month => {
-        const btn = document.createElement("button");
-        const paid = user.payments && user.payments[month] && user.payments[month].status;
+      // ---------------- GOLD CHIT ----------------
+      if (user.chitType === "gold" || user.chitType === "both") {
+        const goldMonths = generateMonths(user.registrationMonth || "2025-01", 10);
 
-        btn.textContent = paid ? "Paid" : "Unpaid";
-        btn.style.margin = "2px";
-        btn.style.padding = "5px";
-        btn.style.background = paid ? "green" : "red";
-        btn.style.color = "white";
+        goldMonths.forEach(month => {
+          const btn = document.createElement("button");
+          const paid = user.payments?.gold?.[month]?.status;
 
-        btn.addEventListener("click", async (e) => {
-          e.stopPropagation();
+          btn.textContent = paid ? "Paid" : "Unpaid";
+          btn.style.margin = "2px";
+          btn.style.padding = "6px 10px";
+          btn.style.border = "none";
+          btn.style.borderRadius = "6px";
+          btn.style.cursor = "pointer";
+          btn.style.background = paid ? "green" : "red";
+          btn.style.color = "white";
+          btn.title = `₹3000 for ${month} (Gold)`;
 
-          if (!user.payments) user.payments = {};
-          const current = user.payments[month] || { status: false, amount: 0 };
-          const newStatus = !current.status;
+          btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
 
-          user.payments[month] = {
-            status: newStatus,
-            amount: newStatus ? 3000 : 0
-          };
+            if (!user.payments) user.payments = {};
+            if (!user.payments.gold) user.payments.gold = {};
 
-          await updateDoc(doc(db, "users", userDoc.id), {
-            payments: user.payments
+            const current = user.payments.gold[month] || { status: false, amount: 0 };
+            const newStatus = !current.status;
+
+            user.payments.gold[month] = {
+              status: newStatus,
+              amount: newStatus ? 3000 : 0
+            };
+
+            await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
+
+            btn.textContent = newStatus ? "Paid" : "Unpaid";
+            btn.style.background = newStatus ? "green" : "red";
           });
 
-          // Update button instantly
-          btn.textContent = newStatus ? "Paid" : "Unpaid";
-          btn.style.background = newStatus ? "green" : "red";
+          paymentTd.appendChild(btn);
         });
 
-        paymentTd.appendChild(btn);
-      });
+        if (user.chitType === "both") {
+          paymentTd.appendChild(document.createElement("br"));
+        }
+      }
+
+      // ---------------- NORMAL CHIT ----------------
+      if (user.chitType === "normal" || user.chitType === "both") {
+        const normalMonths = generateMonths(user.registrationMonth || "2025-01", 11);
+
+        normalMonths.forEach(month => {
+          const btn = document.createElement("button");
+          const paid = user.payments?.normal?.[month]?.status;
+
+          btn.textContent = paid ? "Paid" : "Unpaid";
+          btn.style.margin = "2px";
+          btn.style.padding = "6px 10px";
+          btn.style.border = "none";
+          btn.style.borderRadius = "6px";
+          btn.style.cursor = "pointer";
+          btn.style.background = paid ? "green" : "red";
+          btn.style.color = "white";
+          btn.title = `₹2600 for ${month} (Normal)`;
+
+          btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+
+            if (!user.payments) user.payments = {};
+            if (!user.payments.normal) user.payments.normal = {};
+
+            const current = user.payments.normal[month] || { status: false, amount: 0 };
+            const newStatus = !current.status;
+
+            user.payments.normal[month] = {
+              status: newStatus,
+              amount: newStatus ? 2600 : 0
+            };
+
+            await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
+
+            btn.textContent = newStatus ? "Paid" : "Unpaid";
+            btn.style.background = newStatus ? "green" : "red";
+          });
+
+          paymentTd.appendChild(btn);
+        });
+      }
+
       tr.appendChild(paymentTd);
+// ---------------- Profits (View) ----------------
+const profitViewTd = document.createElement("td");
 
-      // Profit (Latest) column
-      const profitViewTd = document.createElement("td");
-      profitViewTd.textContent = `₹${Number(user.profit || 0)}`;
-      profitViewTd.style.fontWeight = "bold";
-      profitViewTd.style.color = "#2e7d32";
-      tr.appendChild(profitViewTd);
+if (user.chitType === "normal") {
+  profitViewTd.innerHTML = `Normal: ₹${Number(user.profits?.normal || 0)}`;
+} else if (user.chitType === "gold") {
+  profitViewTd.innerHTML = `Gold: ₹${Number(user.profits?.gold || 0)}`;
+} else if (user.chitType === "both") {
+  profitViewTd.innerHTML = `
+    Normal: ₹${Number(user.profits?.normal || 0)} <br>
+    Gold: ₹${Number(user.profits?.gold || 0)}
+  `;
+}
 
-      // Profit (Edit) column
-      const profitTd = document.createElement("td");
+profitViewTd.style.fontWeight = "bold";
+profitViewTd.style.color = "#2e7d32";
+tr.appendChild(profitViewTd);
 
-      const profitInput = document.createElement("input");
-      profitInput.type = "number";
-      profitInput.min = "0";
-      profitInput.step = "1";
-      profitInput.value = Number(user.profit || 0);
-      profitInput.style.width = "90px";
-      profitInput.style.padding = "6px";
-      profitInput.style.border = "1px solid #ccc";
-      profitInput.style.borderRadius = "6px";
+// ---------------- Profits (Edit) ----------------
+const profitTd = document.createElement("td");
 
-      const saveProfitBtn = document.createElement("button");
-      saveProfitBtn.textContent = "Save";
-      saveProfitBtn.style.marginLeft = "8px";
-      saveProfitBtn.style.padding = "6px 10px";
-      saveProfitBtn.style.border = "none";
-      saveProfitBtn.style.borderRadius = "6px";
-      saveProfitBtn.style.cursor = "pointer";
-      saveProfitBtn.style.background = "#1976d2";
-      saveProfitBtn.style.color = "white";
+// Keep references for update
+let normalInput, goldInput;
 
-      saveProfitBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const newProfit = Number(profitInput.value) || 0;
-        await updateDoc(doc(db, "users", userDoc.id), { profit: newProfit });
+if (user.chitType === "normal" || user.chitType === "both") {
+  normalInput = document.createElement("input");
+  normalInput.type = "number";
+  normalInput.min = "0";
+  normalInput.step = "1";
+  normalInput.value = Number(user.profits?.normal || 0);
+  normalInput.style.width = "80px";
+  normalInput.style.marginBottom = "4px";
+  profitTd.appendChild(normalInput);
 
-        // update latest profit column instantly
-        profitViewTd.textContent = `₹${newProfit}`;
-        alert(`Profit updated to ₹${newProfit} for ${user.name}`);
-      });
+  if (user.chitType === "both") {
+    profitTd.appendChild(document.createElement("br"));
+  }
+}
 
-      profitTd.appendChild(profitInput);
-      profitTd.appendChild(saveProfitBtn);
-      tr.appendChild(profitTd);
+if (user.chitType === "gold" || user.chitType === "both") {
+  goldInput = document.createElement("input");
+  goldInput.type = "number";
+  goldInput.min = "0";
+  goldInput.step = "1";
+  goldInput.value = Number(user.profits?.gold || 0);
+  goldInput.style.width = "80px";
+  profitTd.appendChild(goldInput);
+}
+
+const saveProfitBtn = document.createElement("button");
+saveProfitBtn.textContent = "Save";
+saveProfitBtn.style.marginLeft = "8px";
+saveProfitBtn.style.padding = "6px 10px";
+saveProfitBtn.style.border = "none";
+saveProfitBtn.style.borderRadius = "6px";
+saveProfitBtn.style.cursor = "pointer";
+saveProfitBtn.style.background = "#1976d2";
+saveProfitBtn.style.color = "white";
+
+saveProfitBtn.addEventListener("click", async (e) => {
+  e.stopPropagation();
+
+  const newNormal = normalInput ? Number(normalInput.value) || 0 : 0;
+  const newGold = goldInput ? Number(goldInput.value) || 0 : 0;
+
+  await updateDoc(doc(db, "users", userDoc.id), {
+    profits: { normal: newNormal, gold: newGold }
+  });
+
+  if (user.chitType === "normal") {
+    profitViewTd.innerHTML = `Normal: ₹${newNormal}`;
+  } else if (user.chitType === "gold") {
+    profitViewTd.innerHTML = `Gold: ₹${newGold}`;
+  } else {
+    profitViewTd.innerHTML = `
+      Normal: ₹${newNormal} <br>
+      Gold: ₹${newGold}
+    `;
+  }
+
+  alert(`Profits updated for ${user.name}`);
+});
+
+profitTd.appendChild(saveProfitBtn);
+tr.appendChild(profitTd);
 
       // Delete column
       const deleteTd = document.createElement("td");
@@ -219,9 +314,10 @@ function initAddUserForm() {
     const number = document.getElementById("newNumber").value.trim();
     const password = document.getElementById("newPassword").value.trim();
     const startMonth = document.getElementById("newStartMonth").value.trim();
+    const chitType = document.getElementById("newChitType").value.trim();
     const msg = document.getElementById("addUserMsg");
 
-    if (!name || !email || !number || !password || !startMonth) {
+    if (!name || !email || !number || !password || !startMonth || !chitType) {
       msg.textContent = "Please fill all fields.";
       msg.style.color = "red";
       return;
@@ -235,8 +331,9 @@ function initAddUserForm() {
         phone: number,
         password: password,
         registrationMonth: startMonth,
-        payments: {},
-        profit: 0
+        chitType: chitType,
+        payments: { normal: {}, gold: {} }, // ✅ fixed structure
+        profits: { normal: 0, gold: 0 }     // ✅ both profits initialized
       });
 
       msg.textContent = "User added successfully!";
@@ -247,6 +344,7 @@ function initAddUserForm() {
       document.getElementById("newNumber").value = "";
       document.getElementById("newPassword").value = "";
       document.getElementById("newStartMonth").value = "";
+      document.getElementById("newChitType").value = "";
 
     } catch (err) {
       msg.textContent = "Error adding user: " + err.message;
@@ -255,28 +353,4 @@ function initAddUserForm() {
   });
 }
 
-// ------------------- Winner Top-up -------------------
-document.getElementById("winner-topup-form").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const amount = document.getElementById("winner-amount").value.trim();
-  const date = document.getElementById("winner-date").value.trim();
-
-  if (!amount || !date) {
-    document.getElementById("topup-msg").textContent = "Please enter both amount and date!";
-    return;
-  }
-
-  try {
-    await setDoc(doc(db, "settings", "winnerTopup"), {
-      amount: amount,
-      date: date
-    });
-
-    document.getElementById("topup-msg").textContent =
-      `✅ Winner top-up of ₹${amount} set for ${date}!`;
-  } catch (err) {
-    console.error("Error saving topup:", err);
-    document.getElementById("topup-msg").textContent = "❌ Error saving topup!";
-  }
-});
 
