@@ -503,3 +503,56 @@ body {
 /* Prevent horizontal scroll on tiny screens */
 html, body { max-width: 100%; overflow-x: hidden; }
 
+
+
+
+
+
+
+/* Label styling */
+label[for="newChitType"] {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+/* Select box styling */
+#newChitType {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  appearance: none; /* removes default arrow in some browsers */
+  cursor: pointer;
+}
+
+/* Focus effect */
+#newChitType:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 5px rgba(25, 118, 210, 0.4);
+}
+
+/* Dropdown options */
+#newChitType option {
+  padding: 10px;
+}
+
+/* Different colors for chit types (optional) */
+#newChitType option[value="gold"] {
+  color: goldenrod;
+  font-weight: bold;
+}
+#newChitType option[value="normal"] {
+  color: #1976d2;
+}
+#newChitType option[value="both"] {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
