@@ -92,7 +92,25 @@ async function loadUsersPayments() {
       const tr = document.createElement("tr");
 
       // Name, Email, Phone
-      tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td><td>${user.phone || ""}</td>`;
+     // ---------------- User Info (Name, Email, Phone, Chit Type) ----------------
+let chitTypeText = "";
+if (user.chitType === "normal") {
+  chitTypeText = `Normal (${user.scheme || "2600"})`;
+} else if (user.chitType === "gold") {
+  chitTypeText = "Gold";
+} else if (user.chitType === "both") {
+  chitTypeText = `Both (Normal: ${user.scheme || "2600"}, Gold: 3000)`;
+} else {
+  chitTypeText = "N/A";
+}
+
+tr.innerHTML = `
+  <td>${user.name}</td>
+  <td>${user.email}</td>
+  <td>${user.phone || ""}</td>
+  <td>${chitTypeText}</td>
+`;
+
 
       // Payments column
       const paymentTd = document.createElement("td");
@@ -143,134 +161,142 @@ async function loadUsersPayments() {
         }
       }
 
-      // ---------------- NORMAL CHIT ----------------
-      if (user.chitType === "normal" || user.chitType === "both") {
-        const normalMonths = generateMonths(user.registrationMonth || "2025-01", 11);
+    // ---------------- NORMAL CHIT ----------------
+if (user.chitType === "normal" || user.chitType === "both") {
+  const normalMonths = generateMonths(user.registrationMonth || "2025-01", 10);
 
-        normalMonths.forEach(month => {
-          const btn = document.createElement("button");
-          const paid = user.payments?.normal?.[month]?.status;
+  // ✅ decide scheme amount based on saved scheme
+  const schemeAmount =
+    user.scheme === "2500" ? 2500 :
+    user.scheme === "3000" ? 3000 :
+    2600; // fallback for old users
 
-          btn.textContent = paid ? "Paid" : "Unpaid";
-          btn.style.margin = "2px";
-          btn.style.padding = "6px 10px";
-          btn.style.border = "none";
-          btn.style.borderRadius = "6px";
-          btn.style.cursor = "pointer";
-          btn.style.background = paid ? "green" : "red";
-          btn.style.color = "white";
-          btn.title = `₹2600 for ${month} (Normal)`;
+  normalMonths.forEach(month => {
+    const btn = document.createElement("button");
+    const paid = user.payments?.normal?.[month]?.status;
 
-          btn.addEventListener("click", async (e) => {
-            e.stopPropagation();
+    btn.textContent = paid ? "Paid" : "Unpaid";
+    btn.style.margin = "2px";
+    btn.style.padding = "6px 10px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "6px";
+    btn.style.cursor = "pointer";
+    btn.style.background = paid ? "green" : "red";
+    btn.style.color = "white";
+    btn.title = `₹${schemeAmount} for ${month} (Normal)`; // ✅ use scheme amount in tooltip
 
-            if (!user.payments) user.payments = {};
-            if (!user.payments.normal) user.payments.normal = {};
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
 
-            const current = user.payments.normal[month] || { status: false, amount: 0 };
-            const newStatus = !current.status;
+      if (!user.payments) user.payments = {};
+      if (!user.payments.normal) user.payments.normal = {};
 
-            user.payments.normal[month] = {
-              status: newStatus,
-              amount: newStatus ? 2600 : 0
-            };
+      const current = user.payments.normal[month] || { status: false, amount: 0 };
+      const newStatus = !current.status;
 
-            await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
+      user.payments.normal[month] = {
+        status: newStatus,
+        amount: newStatus ? schemeAmount : 0 // ✅ use scheme amount
+      };
 
-            btn.textContent = newStatus ? "Paid" : "Unpaid";
-            btn.style.background = newStatus ? "green" : "red";
-          });
+      await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
 
-          paymentTd.appendChild(btn);
-        });
-      }
+      btn.textContent = newStatus ? "Paid" : "Unpaid";
+      btn.style.background = newStatus ? "green" : "red";
+    });
+
+    paymentTd.appendChild(btn);
+  });
+}
+
 
       tr.appendChild(paymentTd);
-// ---------------- Profits (View) ----------------
-const profitViewTd = document.createElement("td");
 
-if (user.chitType === "normal") {
-  profitViewTd.innerHTML = `Normal: ₹${Number(user.profits?.normal || 0)}`;
-} else if (user.chitType === "gold") {
-  profitViewTd.innerHTML = `Gold: ₹${Number(user.profits?.gold || 0)}`;
-} else if (user.chitType === "both") {
-  profitViewTd.innerHTML = `
-    Normal: ₹${Number(user.profits?.normal || 0)} <br>
-    Gold: ₹${Number(user.profits?.gold || 0)}
-  `;
-}
+      // ---------------- Profits (View) ----------------
+      const profitViewTd = document.createElement("td");
 
-profitViewTd.style.fontWeight = "bold";
-profitViewTd.style.color = "#2e7d32";
-tr.appendChild(profitViewTd);
+      if (user.chitType === "normal") {
+        profitViewTd.innerHTML = `Normal: ₹${Number(user.profits?.normal || 0)}`;
+      } else if (user.chitType === "gold") {
+        profitViewTd.innerHTML = `Gold: ₹${Number(user.profits?.gold || 0)}`;
+      } else if (user.chitType === "both") {
+        profitViewTd.innerHTML = `
+          Normal: ₹${Number(user.profits?.normal || 0)} <br>
+          Gold: ₹${Number(user.profits?.gold || 0)}
+        `;
+      }
 
-// ---------------- Profits (Edit) ----------------
-const profitTd = document.createElement("td");
+      profitViewTd.style.fontWeight = "bold";
+      profitViewTd.style.color = "#2e7d32";
+      tr.appendChild(profitViewTd);
 
-// Keep references for update
-let normalInput, goldInput;
+      // ---------------- Profits (Edit) ----------------
+      const profitTd = document.createElement("td");
 
-if (user.chitType === "normal" || user.chitType === "both") {
-  normalInput = document.createElement("input");
-  normalInput.type = "number";
-  normalInput.min = "0";
-  normalInput.step = "1";
-  normalInput.value = Number(user.profits?.normal || 0);
-  normalInput.style.width = "80px";
-  normalInput.style.marginBottom = "4px";
-  profitTd.appendChild(normalInput);
+      // Keep references for update
+      let normalInput, goldInput;
 
-  if (user.chitType === "both") {
-    profitTd.appendChild(document.createElement("br"));
-  }
-}
+      if (user.chitType === "normal" || user.chitType === "both") {
+        normalInput = document.createElement("input");
+        normalInput.type = "number";
+        normalInput.min = "0";
+        normalInput.step = "1";
+        normalInput.value = Number(user.profits?.normal || 0);
+        normalInput.style.width = "80px";
+        normalInput.style.marginBottom = "4px";
+        profitTd.appendChild(normalInput);
 
-if (user.chitType === "gold" || user.chitType === "both") {
-  goldInput = document.createElement("input");
-  goldInput.type = "number";
-  goldInput.min = "0";
-  goldInput.step = "1";
-  goldInput.value = Number(user.profits?.gold || 0);
-  goldInput.style.width = "80px";
-  profitTd.appendChild(goldInput);
-}
+        if (user.chitType === "both") {
+          profitTd.appendChild(document.createElement("br"));
+        }
+      }
 
-const saveProfitBtn = document.createElement("button");
-saveProfitBtn.textContent = "Save";
-saveProfitBtn.style.marginLeft = "8px";
-saveProfitBtn.style.padding = "6px 10px";
-saveProfitBtn.style.border = "none";
-saveProfitBtn.style.borderRadius = "6px";
-saveProfitBtn.style.cursor = "pointer";
-saveProfitBtn.style.background = "#1976d2";
-saveProfitBtn.style.color = "white";
+      if (user.chitType === "gold" || user.chitType === "both") {
+        goldInput = document.createElement("input");
+        goldInput.type = "number";
+        goldInput.min = "0";
+        goldInput.step = "1";
+        goldInput.value = Number(user.profits?.gold || 0);
+        goldInput.style.width = "80px";
+        profitTd.appendChild(goldInput);
+      }
 
-saveProfitBtn.addEventListener("click", async (e) => {
-  e.stopPropagation();
+      const saveProfitBtn = document.createElement("button");
+      saveProfitBtn.textContent = "Save";
+      saveProfitBtn.style.marginLeft = "8px";
+      saveProfitBtn.style.padding = "6px 10px";
+      saveProfitBtn.style.border = "none";
+      saveProfitBtn.style.borderRadius = "6px";
+      saveProfitBtn.style.cursor = "pointer";
+      saveProfitBtn.style.background = "#1976d2";
+      saveProfitBtn.style.color = "white";
 
-  const newNormal = normalInput ? Number(normalInput.value) || 0 : 0;
-  const newGold = goldInput ? Number(goldInput.value) || 0 : 0;
+      saveProfitBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
 
-  await updateDoc(doc(db, "users", userDoc.id), {
-    profits: { normal: newNormal, gold: newGold }
-  });
+        const newNormal = normalInput ? Number(normalInput.value) || 0 : 0;
+        const newGold = goldInput ? Number(goldInput.value) || 0 : 0;
 
-  if (user.chitType === "normal") {
-    profitViewTd.innerHTML = `Normal: ₹${newNormal}`;
-  } else if (user.chitType === "gold") {
-    profitViewTd.innerHTML = `Gold: ₹${newGold}`;
-  } else {
-    profitViewTd.innerHTML = `
-      Normal: ₹${newNormal} <br>
-      Gold: ₹${newGold}
-    `;
-  }
+        await updateDoc(doc(db, "users", userDoc.id), {
+          profits: { normal: newNormal, gold: newGold }
+        });
 
-  alert(`Profits updated for ${user.name}`);
-});
+        if (user.chitType === "normal") {
+          profitViewTd.innerHTML = `Normal: ₹${newNormal}`;
+        } else if (user.chitType === "gold") {
+          profitViewTd.innerHTML = `Gold: ₹${newGold}`;
+        } else {
+          profitViewTd.innerHTML = `
+            Normal: ₹${newNormal} <br>
+            Gold: ₹${newGold}
+          `;
+        }
 
-profitTd.appendChild(saveProfitBtn);
-tr.appendChild(profitTd);
+        alert(`Profits updated for ${user.name}`);
+      });
+
+      profitTd.appendChild(saveProfitBtn);
+      tr.appendChild(profitTd);
 
       // Delete column
       const deleteTd = document.createElement("td");
@@ -304,7 +330,28 @@ tr.appendChild(profitTd);
 }
 
 // ------------------- Add User Form -------------------
+let addUserInitDone = false; // ✅ prevent multiple listeners
+
 function initAddUserForm() {
+  if (addUserInitDone) return;
+  addUserInitDone = true;
+
+  const chitTypeSelect = document.getElementById("newChitType");
+  const schemeContainer = document.getElementById("schemeContainer");
+  const schemeSelect = document.getElementById("normalScheme");
+
+  // 🔹 Show / Hide scheme dropdown
+  chitTypeSelect.addEventListener("change", () => {
+    if (chitTypeSelect.value === "normal" || chitTypeSelect.value === "both") {
+      schemeContainer.style.display = "block";
+      schemeSelect.setAttribute("required", "true");
+    } else {
+      schemeContainer.style.display = "none";
+      schemeSelect.removeAttribute("required");
+      schemeSelect.value = "";
+    }
+  });
+
   const addBtn = document.getElementById("addUserBtn");
   if (!addBtn) return;
 
@@ -314,7 +361,8 @@ function initAddUserForm() {
     const number = document.getElementById("newNumber").value.trim();
     const password = document.getElementById("newPassword").value.trim();
     const startMonth = document.getElementById("newStartMonth").value.trim();
-    const chitType = document.getElementById("newChitType").value.trim();
+    const chitType = chitTypeSelect.value.trim();
+    const scheme = schemeSelect.value.trim(); // ✅ capture scheme
     const msg = document.getElementById("addUserMsg");
 
     if (!name || !email || !number || !password || !startMonth || !chitType) {
@@ -323,8 +371,15 @@ function initAddUserForm() {
       return;
     }
 
+    if ((chitType === "normal" || chitType === "both") && !scheme) {
+      msg.textContent = "Please select a scheme for Normal chit.";
+      msg.style.color = "red";
+      return;
+    }
+
     try {
       const uid = email.replace(/[@.]/g, "_");
+
       await setDoc(doc(db, "users", uid), {
         name,
         email,
@@ -332,19 +387,25 @@ function initAddUserForm() {
         password: password,
         registrationMonth: startMonth,
         chitType: chitType,
-        payments: { normal: {}, gold: {} }, // ✅ fixed structure
-        profits: { normal: 0, gold: 0 }     // ✅ both profits initialized
+        scheme: chitType === "normal" || chitType === "both" ? scheme : null, // ✅ save scheme
+        payments: { normal: {}, gold: {} },
+        profits: { normal: 0, gold: 0 }
       });
 
       msg.textContent = "User added successfully!";
       msg.style.color = "green";
 
+      // Clear inputs
       document.getElementById("newName").value = "";
       document.getElementById("newEmail").value = "";
       document.getElementById("newNumber").value = "";
       document.getElementById("newPassword").value = "";
       document.getElementById("newStartMonth").value = "";
-      document.getElementById("newChitType").value = "";
+      chitTypeSelect.value = "";
+      schemeSelect.value = "";
+      schemeContainer.style.display = "none";
+
+      loadUsersPayments();
 
     } catch (err) {
       msg.textContent = "Error adding user: " + err.message;
