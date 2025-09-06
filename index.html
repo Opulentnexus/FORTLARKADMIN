@@ -46,6 +46,7 @@
         <th>Name</th>
         <th>Email</th>
         <th>Phone</th>
+        <th>Chit Type</th>
         <th>Payments (10 Months)</th>
         <th>Profit</th> 
         
@@ -58,23 +59,34 @@
 </section>
 
     
-   <section id="users" class="content-section">
+ <section id="users" class="content-section">
   <h2>Add New User</h2>
 
   <div class="add-user-form">
     <input type="text" id="newName" placeholder="Name" required>
     <input type="email" id="newEmail" placeholder="Email" required>
     <input type="text" id="newNumber" placeholder="Phone Number" required>
-     <input type="password" id="newPassword" placeholder="Password" required>
-     <label for="newChitType">Chit Type</label>
-<select id="newChitType" required>
-  <option value="">Select Chit</option>
-  <option value="gold">Gold Chit</option>
-  <option value="normal">Normal Chit</option>
-  <option value="both">Both</option>
-</select>
+    <input type="password" id="newPassword" placeholder="Password" required>
 
-    <input type="month" id="newStartMonth" placeholder="Start Month (YYYY-MM)" required>
+    <label for="newChitType">Chit Type</label>
+    <select id="newChitType" required>
+      <option value="">Select Chit</option>
+      <option value="gold">Gold Chit</option>
+      <option value="normal">Normal Chit</option>
+      <option value="both">Both</option>
+    </select>
+
+    <!-- Hidden scheme dropdown -->
+    <div id="schemeContainer" style="display:none; margin-top:10px;">
+      <label for="normalScheme">Normal Chit Scheme</label>
+      <select id="normalScheme">
+        <option value="">Select Scheme</option>
+        <option value="2500">2500 Scheme</option>
+        <option value="3000">3000 Scheme</option>
+      </select>
+    </div>
+
+    <input type="month" id="newStartMonth" required>
     <button id="addUserBtn">Add User</button>
     <p id="addUserMsg"></p>
   </div>
