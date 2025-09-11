@@ -42,10 +42,14 @@ loginBtn.addEventListener("click", () => {
     });
 });
 
-// ------------------- Logout -------------------
-logoutBtn.addEventListener("click", () => {
-  signOut(auth);
-});
+
+
+
+
+
+
+
+
 
 // ------------------- Auth State -------------------
 onAuthStateChanged(auth, (user) => {
@@ -95,11 +99,11 @@ async function loadUsersPayments() {
      // ---------------- User Info (Name, Email, Phone, Chit Type) ----------------
 let chitTypeText = "";
 if (user.chitType === "normal") {
-  chitTypeText = `Normal (${user.scheme || "2600"})`;
+  chitTypeText = `Normal (${user.scheme || "2500"})`;
 } else if (user.chitType === "gold") {
   chitTypeText = "Gold";
 } else if (user.chitType === "both") {
-  chitTypeText = `Both (Normal: ${user.scheme || "2600"}, Gold: 3000)`;
+  chitTypeText = `Both (Normal: ${user.scheme || "2500"}, Gold: 3000)`;
 } else {
   chitTypeText = "N/A";
 }
@@ -112,56 +116,10 @@ tr.innerHTML = `
 `;
 
 
-      // Payments column
-      const paymentTd = document.createElement("td");
+// Payments column
+const paymentTd = document.createElement("td");
 
-      // ---------------- GOLD CHIT ----------------
-      if (user.chitType === "gold" || user.chitType === "both") {
-        const goldMonths = generateMonths(user.registrationMonth || "2025-01", 10);
-
-        goldMonths.forEach(month => {
-          const btn = document.createElement("button");
-          const paid = user.payments?.gold?.[month]?.status;
-
-          btn.textContent = paid ? "Paid" : "Unpaid";
-          btn.style.margin = "2px";
-          btn.style.padding = "6px 10px";
-          btn.style.border = "none";
-          btn.style.borderRadius = "6px";
-          btn.style.cursor = "pointer";
-          btn.style.background = paid ? "green" : "red";
-          btn.style.color = "white";
-          btn.title = `₹3000 for ${month} (Gold)`;
-
-          btn.addEventListener("click", async (e) => {
-            e.stopPropagation();
-
-            if (!user.payments) user.payments = {};
-            if (!user.payments.gold) user.payments.gold = {};
-
-            const current = user.payments.gold[month] || { status: false, amount: 0 };
-            const newStatus = !current.status;
-
-            user.payments.gold[month] = {
-              status: newStatus,
-              amount: newStatus ? 3000 : 0
-            };
-
-            await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
-
-            btn.textContent = newStatus ? "Paid" : "Unpaid";
-            btn.style.background = newStatus ? "green" : "red";
-          });
-
-          paymentTd.appendChild(btn);
-        });
-
-        if (user.chitType === "both") {
-          paymentTd.appendChild(document.createElement("br"));
-        }
-      }
-
-    // ---------------- NORMAL CHIT ----------------
+// ---------------- NORMAL CHIT ----------------
 if (user.chitType === "normal" || user.chitType === "both") {
   const normalMonths = generateMonths(user.registrationMonth || "2025-01", 10);
 
@@ -183,7 +141,7 @@ if (user.chitType === "normal" || user.chitType === "both") {
     btn.style.cursor = "pointer";
     btn.style.background = paid ? "green" : "red";
     btn.style.color = "white";
-    btn.title = `₹${schemeAmount} for ${month} (Normal)`; // ✅ use scheme amount in tooltip
+    btn.title = `₹${schemeAmount} for ${month} (Normal)`;
 
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -196,7 +154,7 @@ if (user.chitType === "normal" || user.chitType === "both") {
 
       user.payments.normal[month] = {
         status: newStatus,
-        amount: newStatus ? schemeAmount : 0 // ✅ use scheme amount
+        amount: newStatus ? schemeAmount : 0
       };
 
       await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
@@ -207,10 +165,55 @@ if (user.chitType === "normal" || user.chitType === "both") {
 
     paymentTd.appendChild(btn);
   });
+
+  if (user.chitType === "both") {
+    paymentTd.appendChild(document.createElement("br")); // ✅ gap before gold chit
+  }
 }
 
+// ---------------- GOLD CHIT ----------------
+if (user.chitType === "gold" || user.chitType === "both") {
+  const goldMonths = generateMonths(user.registrationMonth || "2025-01", 10);
 
-      tr.appendChild(paymentTd);
+  goldMonths.forEach(month => {
+    const btn = document.createElement("button");
+    const paid = user.payments?.gold?.[month]?.status;
+
+    btn.textContent = paid ? "Paid" : "Unpaid";
+    btn.style.margin = "2px";
+    btn.style.padding = "6px 10px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "6px";
+    btn.style.cursor = "pointer";
+    btn.style.background = paid ? "green" : "yellow";
+    btn.style.color = "white";
+    btn.title = `₹3000 for ${month} (Gold)`;
+
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+
+      if (!user.payments) user.payments = {};
+      if (!user.payments.gold) user.payments.gold = {};
+
+      const current = user.payments.gold[month] || { status: false, amount: 0 };
+      const newStatus = !current.status;
+
+      user.payments.gold[month] = {
+        status: newStatus,
+        amount: newStatus ? 3000 : 0
+      };
+
+      await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
+
+      btn.textContent = newStatus ? "Paid" : "Unpaid";
+      btn.style.background = newStatus ? "green" : "yellow";
+    });
+
+    paymentTd.appendChild(btn);
+  });
+}
+
+tr.appendChild(paymentTd);
 
       // ---------------- Profits (View) ----------------
       const profitViewTd = document.createElement("td");
