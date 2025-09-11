@@ -139,7 +139,7 @@ if (user.chitType === "normal" || user.chitType === "both") {
     btn.style.border = "none";
     btn.style.borderRadius = "6px";
     btn.style.cursor = "pointer";
-    btn.style.background = paid ? "green" : "red";
+    btn.style.background = paid ? "green" : "grey";
     btn.style.color = "white";
     btn.title = `₹${schemeAmount} for ${month} (Normal)`;
 
@@ -185,7 +185,7 @@ if (user.chitType === "gold" || user.chitType === "both") {
     btn.style.border = "none";
     btn.style.borderRadius = "6px";
     btn.style.cursor = "pointer";
-    btn.style.background = paid ? "green" : "yellow";
+    btn.style.background = paid ? "green" : "orange";
     btn.style.color = "white";
     btn.title = `₹3000 for ${month} (Gold)`;
 
