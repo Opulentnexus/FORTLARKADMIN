@@ -206,7 +206,7 @@ if (user.chitType === "gold" || user.chitType === "both") {
       await updateDoc(doc(db, "users", userDoc.id), { payments: user.payments });
 
       btn.textContent = newStatus ? "Paid" : "Unpaid";
-      btn.style.background = newStatus ? "green" : "yellow";
+      btn.style.background = newStatus ? "green" : "orange";
     });
 
     paymentTd.appendChild(btn);
@@ -416,5 +416,6 @@ function initAddUserForm() {
     }
   });
 }
+
 
 
